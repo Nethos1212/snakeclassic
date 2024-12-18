@@ -1,5 +1,5 @@
 // Initialize game and Telegram integration
-let TG = window.Telegram && window.Telegram.WebApp;
+const tg = window.Telegram?.WebApp;
 
 // Game setup
 const canvas = document.getElementById('gameCanvas');
@@ -36,6 +36,15 @@ let isMuted = false;
 const eatSound = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAEAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ea2tra2tra3l5eXl5eYaGhoaGhpSUlJSUlKGhoaGhoaGvr6+vr6+8vLy8vLzKysrKysrX19fX19fX5OTk5OTk8vLy8vLy////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAVY82AhbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAALACwAAP/AADwQKVE9YWDGPkQWpT66yk4+zIiYPoTUaT3tnU+NFRUWQKXjaEWQKXjaEWQKXjaEWQKXjaEWQKXjQAAAAP/jGMQRC//K/f3+/vv/BP/6/z+CsEg+WTkkHykFaUtLqb2OZ67m/f//xf/+/F8Xy+D4PEg+D4PF8HwfB8HwfB8HwfB8HwfB8AAAAAAAAAAAAAAA/+MYxBYLAAJkAVEQABYQDkhaXVMQU1FMy45OS41qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqTEFNRTMuOTkuNaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/4xjEIgvIAlYBTBABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
 const gameOverSound = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAEAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ea2tra2tra3l5eXl5eYaGhoaGhpSUlJSUlKGhoaGhoaGvr6+vr6+8vLy8vLzKysrKysrX19fX19fX5OTk5OTk8vLy8vLy////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAVY82AhbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAALACwAAP/AADwQKVE9YWDGPkQWpT66yk4+zIiYPoTUaT3tnU+NFRUWQKXjaEWQKXjaEWQKXjaEWQKXjaEWQKXjQAAAAP/jGMQRC//K/f3+/vv/BP/6/z+CsEg+WTkkHykFaUtLqb2OZ67m/f//xf/+/F8Xy+D4PEg+D4PF8HwfB8HwfB8HwfB8HwfB8AAAAAAAAAAAAAAA/+MYxBYLAAJkAVEQABYQDkhaXVMQU1FMy45OS41qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqTEFNRTMuOTkuNaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/4xjEIgvIAlYBTBABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
 
+// Initialize Telegram WebApp
+if (tg) {
+    tg.ready();
+    // Set the header color to match the game
+    tg.setHeaderColor('secondary_bg_color');
+    // Enable closing confirmation
+    tg.enableClosingConfirmation();
+}
+
 // Sound control
 document.querySelector('.sound-control').addEventListener('click', () => {
     isMuted = !isMuted;
@@ -52,15 +61,17 @@ const touchControls = {
 };
 
 Object.entries(touchControls).forEach(([direction, button]) => {
-    button.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        switch(direction) {
-            case 'upBtn': if (dy !== 1) { dx = 0; dy = -1; } break;
-            case 'downBtn': if (dy !== -1) { dx = 0; dy = 1; } break;
-            case 'leftBtn': if (dx !== 1) { dx = -1; dy = 0; } break;
-            case 'rightBtn': if (dx !== -1) { dx = 1; dy = 0; } break;
-        }
-    });
+    if (button) {
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            switch(direction) {
+                case 'upBtn': if (dy !== 1) { dx = 0; dy = -1; } break;
+                case 'downBtn': if (dy !== -1) { dx = 0; dy = 1; } break;
+                case 'leftBtn': if (dx !== 1) { dx = -1; dy = 0; } break;
+                case 'rightBtn': if (dx !== -1) { dx = 1; dy = 0; } break;
+            }
+        });
+    }
 });
 
 // Keyboard controls
@@ -105,12 +116,12 @@ function drawGame() {
 }
 
 function clearCanvas() {
-    ctx.fillStyle = '#34495e';
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--tg-theme-secondary-bg-color') || '#34495e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function drawSnake() {
-    ctx.fillStyle = '#2ecc71';
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--tg-theme-button-color') || '#2ecc71';
     snake.forEach(segment => {
         ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
     });
@@ -140,8 +151,8 @@ function hasEatenFood() {
         score += 10;
         scoreElement.textContent = `Score: ${score}`;
         // Share score with Telegram if available
-        if (TG) {
-            TG.sendData(JSON.stringify({ score: score }));
+        if (tg) {
+            tg.CloudStorage.setItem('currentScore', score.toString());
         }
         return true;
     }
@@ -193,9 +204,11 @@ function gameOver() {
     ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 80);
     
-    // Send final score to Telegram if available
-    if (TG && score > 0) {
-        TG.sendData(JSON.stringify({ finalScore: score }));
+    // Share final score with Telegram if available
+    if (tg && score > 0) {
+        tg.CloudStorage.setItem('highScore', Math.max(score, parseInt(tg.CloudStorage.getItem('highScore') || '0')));
+        tg.sendData(JSON.stringify({ finalScore: score }));
+        tg.showAlert(`Game Over! Final Score: ${score}`);
     }
     
     document.addEventListener('keydown', function restart(event) {
@@ -222,11 +235,23 @@ function saveGameState() {
         dy
     };
     localStorage.setItem('snakeGameState', JSON.stringify(gameState));
+    if (tg) {
+        tg.CloudStorage.setItem('gameState', JSON.stringify(gameState));
+    }
 }
 
 // Load game progress
-function loadGameState() {
-    const savedState = localStorage.getItem('snakeGameState');
+async function loadGameState() {
+    let savedState = localStorage.getItem('snakeGameState');
+    
+    if (tg) {
+        // Try to load from Telegram Cloud Storage
+        const cloudState = await tg.CloudStorage.getItem('gameState');
+        if (cloudState) {
+            savedState = cloudState;
+        }
+    }
+    
     if (savedState) {
         const gameState = JSON.parse(savedState);
         snake = gameState.snake;
@@ -242,8 +267,8 @@ function loadGameState() {
 setInterval(saveGameState, 1000);
 
 // Start the game
-window.addEventListener('load', () => {
-    loadGameState();
+window.addEventListener('load', async () => {
+    await loadGameState();
     generateFood();
     drawGame();
 });
