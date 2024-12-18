@@ -1,0 +1,79 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #2c3e50;
+    font-family: Arial, sans-serif;
+    touch-action: none;
+}
+
+.game-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 20px;
+}
+
+canvas {
+    width: 100%;
+    height: auto;
+    border: 2px solid #fff;
+    background-color: #34495e;
+    touch-action: none;
+}
+
+#score {
+    color: #fff;
+    font-size: 24px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.controls {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+}
+
+.controls button {
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    border: none;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    touch-action: none;
+}
+
+.sound-control {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 24px;
+}
+
+@media (max-width: 768px) {
+    .controls {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        place-items: center;
+    }
+}
