@@ -1,4 +1,7 @@
-// Initialize game
+// Initialize game and Telegram integration
+let TG = window.Telegram && window.Telegram.WebApp;
+
+// Game setup
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
@@ -128,6 +131,10 @@ function hasEatenFood() {
         if (!isMuted) eatSound.play();
         score += 10;
         scoreElement.textContent = `Score: ${score}`;
+        // Share score with Telegram if available
+        if (TG) {
+            TG.sendData(JSON.stringify({ score: score }));
+        }
         generateFood();
         return true;
     }
@@ -173,6 +180,11 @@ function gameOver() {
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 80);
+    
+    // Send final score to Telegram if available
+    if (TG && score > 0) {
+        TG.sendData(JSON.stringify({ finalScore: score }));
+    }
     
     document.addEventListener('keydown', function restart(event) {
         if (event.code === 'Space') {
