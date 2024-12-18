@@ -1,8 +1,4 @@
-// Initialize Telegram Game
-if (window.TelegramGameProxy) {
-    TelegramGameProxy.initParams();
-}
-
+// Initialize game
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
@@ -132,9 +128,6 @@ function hasEatenFood() {
         if (!isMuted) eatSound.play();
         score += 10;
         scoreElement.textContent = `Score: ${score}`;
-        if (window.TelegramGameProxy) {
-            TelegramGameProxy.shareScore(score);
-        }
         generateFood();
         return true;
     }
