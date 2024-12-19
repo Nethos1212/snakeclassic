@@ -34,6 +34,7 @@ let isMuted = false;
 
 // Sound effects
 const eatSound = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAEAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ea2tra2tra3l5eXl5eYaGhoaGhpSUlJSUlKGhoaGhoaGvr6+vr6+8vLy8vLzKysrKysrX19fX19fX5OTk5OTk8vLy8vLy////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAVY82AhbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAALACwAAP/AADwQKVE9YWDGPkQWpT66yk4+zIiYPoTUaT3tnU+NFRUWQKXjaEWQKXjaEWQKXjaEWQKXjaEWQKXjQAAAAP/jGMQRC//K/f3+/vv/BP/6/z+CsEg+WTkkHykFaUtLqb2OZ67m/f//xf/+/F8Xy+D4PEg+D4PF8HwfB8HwfB8HwfB8HwfB8AAAAAAAAAAAAAAA/+MYxBYLAAJkAVEQABYQDkhaXVMQU1FMy45OS41qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqTEFNRTMuOTkuNaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/4xjEIgvIAlYBTBABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
+
 const gameOverSound = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAEAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ea2tra2tra3l5eXl5eYaGhoaGhpSUlJSUlKGhoaGhoaGvr6+vr6+8vLy8vLzKysrKysrX19fX19fX5OTk5OTk8vLy8vLy////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAVY82AhbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAALACwAAP/AADwQKVE9YWDGPkQWpT66yk4+zIiYPoTUaT3tnU+NFRUWQKXjaEWQKXjaEWQKXjaEWQKXjaEWQKXjQAAAAP/jGMQRC//K/f3+/vv/BP/6/z+CsEg+WTkkHykFaUtLqb2OZ67m/f//xf/+/F8Xy+D4PEg+D4PF8HwfB8HwfB8HwfB8HwfB8AAAAAAAAAAAAAAA/+MYxBYLAAJkAVEQABYQDkhaXVMQU1FMy45OS41qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqTEFNRTMuOTkuNaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/4xjEIgvIAlYBTBABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
 
 // Initialize Telegram WebApp
@@ -236,7 +237,14 @@ function saveGameState() {
     };
     localStorage.setItem('snakeGameState', JSON.stringify(gameState));
     if (tg) {
-        tg.CloudStorage.setItem('gameState', JSON.stringify(gameState));
+        try {
+            // Only try to use CloudStorage if it's available
+            if (tg.CloudStorage) {
+                tg.CloudStorage.setItem('gameState', JSON.stringify(gameState));
+            }
+        } catch (error) {
+            console.log('CloudStorage not supported, game state saved to localStorage only');
+        }
     }
 }
 
@@ -245,21 +253,33 @@ async function loadGameState() {
     let savedState = localStorage.getItem('snakeGameState');
     
     if (tg) {
-        // Try to load from Telegram Cloud Storage
-        const cloudState = await tg.CloudStorage.getItem('gameState');
-        if (cloudState) {
-            savedState = cloudState;
+        try {
+            // Try to load from Telegram Cloud Storage if available
+            if (tg.CloudStorage) {
+                const cloudState = await tg.CloudStorage.getItem('gameState');
+                if (cloudState) {
+                    savedState = cloudState;
+                }
+            }
+        } catch (error) {
+            console.log('CloudStorage not supported, using localStorage instead');
         }
     }
     
     if (savedState) {
-        const gameState = JSON.parse(savedState);
-        snake = gameState.snake;
-        food = gameState.food;
-        score = gameState.score;
-        dx = gameState.dx;
-        dy = gameState.dy;
-        scoreElement.textContent = `Score: ${score}`;
+        try {
+            const gameState = JSON.parse(savedState);
+            snake = gameState.snake;
+            food = gameState.food;
+            score = gameState.score;
+            dx = gameState.dx;
+            dy = gameState.dy;
+            scoreElement.textContent = `Score: ${score}`;
+        } catch (error) {
+            console.log('Error parsing saved game state:', error);
+            // If there's an error parsing the saved state, start a new game
+            generateFood();
+        }
     }
 }
 
