@@ -1,18 +1,17 @@
-// Initialize game and Telegram integration
-const tg = window.Telegram?.WebApp;
-
-// Game setup
+// Initialize game
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
+const muteButton = document.getElementById('muteButton');
 
-// Responsive canvas sizing
+// Game setup
 function resizeCanvas() {
-    const container = document.querySelector('.game-container');
-    const size = Math.min(container.clientWidth, window.innerHeight * 0.7);
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
-    canvas.width = canvas.height = 400; // Keep internal resolution constant
+    canvas.width = Math.floor((window.innerWidth - 20) / gridSize) * gridSize;
+    canvas.height = Math.floor((window.innerHeight - 20) / gridSize) * gridSize;
+    tileCount = Math.min(
+        Math.floor(canvas.width / gridSize),
+        Math.floor(canvas.height / gridSize)
+    );
 }
 
 window.addEventListener('resize', resizeCanvas);
@@ -20,31 +19,24 @@ resizeCanvas();
 
 // Game constants
 const gridSize = 20;
-const tileCount = canvas.width / gridSize;
+let tileCount;
 
-// Game state
+// Initialize game state
 let snake = [{ x: 10, y: 10 }];
 let food = { x: 5, y: 5 };
 let dx = 0;
 let dy = 0;
 let score = 0;
-let gameSpeed = 100;
 let gameLoop;
 let isMuted = false;
+
+// Game speed (lower = faster)
+const gameSpeed = 100;
 
 // Sound effects
 const eatSound = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAEAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ea2tra2tra3l5eXl5eYaGhoaGhpSUlJSUlKGhoaGhoaGvr6+vr6+8vLy8vLzKysrKysrX19fX19fX5OTk5OTk8vLy8vLy////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAVY82AhbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAALACwAAP/AADwQKVE9YWDGPkQWpT66yk4+zIiYPoTUaT3tnU+NFRUWQKXjaEWQKXjaEWQKXjaEWQKXjaEWQKXjQAAAAP/jGMQRC//K/f3+/vv/BP/6/z+CsEg+WTkkHykFaUtLqb2OZ67m/f//xf/+/F8Xy+D4PEg+D4PF8HwfB8HwfB8HwfB8HwfB8AAAAAAAAAAAAAAA/+MYxBYLAAJkAVEQABYQDkhaXVMQU1FMy45OS41qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqTEFNRTMuOTkuNaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/4xjEIgvIAlYBTBABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
 
 const gameOverSound = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAEAAABVgANTU1NTU1Q0NDQ0NDUFBQUFBQXl5eXl5ea2tra2tra3l5eXl5eYaGhoaGhpSUlJSUlKGhoaGhoaGvr6+vr6+8vLy8vLzKysrKysrX19fX19fX5OTk5OTk8vLy8vLy////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAVY82AhbwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAALACwAAP/AADwQKVE9YWDGPkQWpT66yk4+zIiYPoTUaT3tnU+NFRUWQKXjaEWQKXjaEWQKXjaEWQKXjaEWQKXjQAAAAP/jGMQRC//K/f3+/vv/BP/6/z+CsEg+WTkkHykFaUtLqb2OZ67m/f//xf/+/F8Xy+D4PEg+D4PF8HwfB8HwfB8HwfB8HwfB8AAAAAAAAAAAAAAA/+MYxBYLAAJkAVEQABYQDkhaXVMQU1FMy45OS41qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqTEFNRTMuOTkuNaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/4xjEIgvIAlYBTBABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
-
-// Initialize Telegram WebApp
-if (tg) {
-    tg.ready();
-    // Set the header color to match the game
-    tg.setHeaderColor('secondary_bg_color');
-    // Enable closing confirmation
-    tg.enableClosingConfirmation();
-}
 
 // Sound control
 document.querySelector('.sound-control').addEventListener('click', () => {
@@ -117,12 +109,12 @@ function drawGame() {
 }
 
 function clearCanvas() {
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--tg-theme-secondary-bg-color') || '#34495e';
+    ctx.fillStyle = '#34495e';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function drawSnake() {
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--tg-theme-button-color') || '#2ecc71';
+    ctx.fillStyle = '#2ecc71';
     snake.forEach(segment => {
         ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
     });
