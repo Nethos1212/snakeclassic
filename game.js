@@ -151,10 +151,6 @@ function hasEatenFood() {
         }
         score += 10;
         scoreElement.textContent = `Score: ${score}`;
-        // Share score with Telegram if available
-        if (tg) {
-            tg.CloudStorage.setItem('currentScore', score.toString());
-        }
         return true;
     }
     return false;
@@ -205,13 +201,6 @@ function gameOver() {
     ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
     ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 80);
     
-    // Share final score with Telegram if available
-    if (tg && score > 0) {
-        tg.CloudStorage.setItem('highScore', Math.max(score, parseInt(tg.CloudStorage.getItem('highScore') || '0')));
-        tg.sendData(JSON.stringify({ finalScore: score }));
-        tg.showAlert(`Game Over! Final Score: ${score}`);
-    }
-    
     document.addEventListener('keydown', function restart(event) {
         if (event.code === 'Space') {
             snake = [{ x: 10, y: 10 }];
@@ -236,35 +225,11 @@ function saveGameState() {
         dy
     };
     localStorage.setItem('snakeGameState', JSON.stringify(gameState));
-    if (tg) {
-        try {
-            // Only try to use CloudStorage if it's available
-            if (tg.CloudStorage) {
-                tg.CloudStorage.setItem('gameState', JSON.stringify(gameState));
-            }
-        } catch (error) {
-            console.log('CloudStorage not supported, game state saved to localStorage only');
-        }
-    }
 }
 
 // Load game progress
 async function loadGameState() {
-    let savedState = localStorage.getItem('snakeGameState');
-    
-    if (tg) {
-        try {
-            // Try to load from Telegram Cloud Storage if available
-            if (tg.CloudStorage) {
-                const cloudState = await tg.CloudStorage.getItem('gameState');
-                if (cloudState) {
-                    savedState = cloudState;
-                }
-            }
-        } catch (error) {
-            console.log('CloudStorage not supported, using localStorage instead');
-        }
-    }
+    const savedState = localStorage.getItem('snakeGameState');
     
     if (savedState) {
         try {
